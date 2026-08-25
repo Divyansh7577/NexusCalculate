@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexus Calculate — Ultimate Pro Beast</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0b0f19;
+            --bg-gradient: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0b0f19 70%);
+            --card-bg: rgba(17, 24, 39, 0.88);
+            --card-border: rgba(139, 92, 246, 0.25);
+            --primary-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --accent-glow: rgba(139, 92, 246, 0.35);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --btn-bg: rgba(30, 41, 59, 0.75);
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            background-color: var(--bg-base);
+            background-image: var(--bg-gradient);
+            color: var(--text-main);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            height: 100%;
+            max-height: 980px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-left: 1px solid var(--card-border);
+            border-right: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+
+        @media (min-width: 501px) {
+            .app-container {
+                border: 1px solid var(--card-border);
+                border-radius: 24px;
+                height: 96vh;
+            }
+        }
+
+        /* App Header */
+        .app-header {
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(11, 15, 25, 0.6);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--primary-purple), var(--accent-cyan));
+            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .brand-name {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #fff, var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Mode Selector Tabs */
+        .nav-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px 12px;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .nav-tabs::-webkit-scrollbar { display: none; }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 10px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--primary-purple);
+            color: white;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-purple) transparent;
+        }
+
+        .panel {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .panel.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(3px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Calculator Display */
+        .calc-display {
+            background: rgba(11, 15, 25, 0.9);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            text-align: right;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+        }
+
+        .calc-history-preview {
+            font-size: 11px;
+            color: var(--text-muted);
+            min-height: 15px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .calc-main-output {
+            font-size: 32px;
+            font-weight: 600;
+            color: #fff;
+            margin-top: 2px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .calc-main-output::-webkit-scrollbar { display: none; }
+
+        /* Keypad Grids */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            flex: 1;
+        }
+
+        .keypad.pro {
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .key {
+            background: var(--btn-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            user-select: none;
+            min-height: 52px;
+        }
+
+        .keypad.pro .key {
+            font-size: 12px;
+            min-height: 38px;
+            padding: 2px;
+        }
+
+        .key:active {
+            transform: scale(0.93);
+        }
+
+        .key.operator {
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.12);
+            font-size: 18px;
+        }
+
+        .key.action {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.12);
+            font-weight: 600;
+        }
+
+        .key.equals {
+            background: linear-gradient(135deg, var(--primary-purple), var(--accent-cyan));
+            color: white;
+            font-weight: 600;
+            font-size: 20px;
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        /* History Panel Styling */
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 2px;
+        }
+
+        .history-item {
+            background: rgba(11, 15, 25, 0.7);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-expr {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .history-ans {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--accent-cyan);
+        }
+
+        .clear-history-btn {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        /* Generic Forms & Tools */
+        .tool-group {
+            margin-bottom: 10px;
+        }
+
+        .tool-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tool-input, .tool-select {
+            width: 100%;
+            background: rgba(11, 15, 25, 0.7);
+            border: 1px solid var(--card-border);
+            border-radius: 9px;
+            padding: 9px 12px;
+            color: white;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .tool-input:focus, .tool-select:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 8px rgba(6, 182, 212, 0.25);
+        }
+
+        .tool-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-purple), #6366f1);
+            color: white;
+            border: none;
+            border-radius: 9px;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 10px var(--accent-glow);
+            transition: opacity 0.2s;
+            margin-top: 4px;
+        }
+
+        .tool-btn:active { opacity: 0.85; }
+
+        .result-box {
+            background: rgba(11, 15, 25, 0.7);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 9px;
+            padding: 10px 12px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-main);
+            word-break: break-all;
+            line-height: 1.4;
+        }
+
+        /* Footer Attribution */
+        .app-footer {
+            padding: 9px 16px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(11, 15, 25, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Header -->
+    <div class="app-header">
+        <div class="brand">
+            <div class="brand-icon">÷</div>
+            <span class="brand-name">Nexus Calculate</span>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted);">Pro Beast v3.0</div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('calc', this)">Calc</button>
+        <button class="tab-btn" onclick="switchTab('procalc', this)">ProCalc</button>
+        <button class="tab-btn" onclick="switchTab('history', this)">History</button>
+        <button class="tab-btn" onclick="switchTab('algebra', this)">Algebra</button>
+        <button class="tab-btn" onclick="switchTab('stats', this)">Stats</button>
+        <button class="tab-btn" onclick="switchTab('units', this)">Units</button>
+        <button class="tab-btn" onclick="switchTab('bases', this)">Bases</button>
+    </div>
+
+    <!-- Content Panels -->
+    <div class="content-area">
+        
+        <!-- 1. Standard Calculator Panel -->
+        <div id="panel-calc" class="panel active">
+            <div class="calc-display">
+                <div class="calc-history-preview" id="calcHistory"></div>
+                <div class="calc-main-output" id="calcOutput">0</div>
+            </div>
+            <div class="keypad">
+                <button class="key action" onclick="clearCalc()">AC</button>
+                <button class="key operator" onclick="appendCalc('(')">(</button>
+                <button class="key operator" onclick="appendCalc(')')">)</button>
+                <button class="key operator" onclick="appendCalc('/')">÷</button>
+                
+                <button class="key" onclick="appendCalc('7')">7</button>
+                <button class="key" onclick="appendCalc('8')">8</button>
+                <button class="key" onclick="appendCalc('9')">9</button>
+                <button class="key operator" onclick="appendCalc('*')">×</button>
+                
+                <button class="key" onclick="appendCalc('4')">4</button>
+                <button class="key" onclick="appendCalc('5')">5</button>
+                <button class="key" onclick="appendCalc('6')">6</button>
+                <button class="key operator" onclick="appendCalc('-')">−</button>
+                
+                <button class="key" onclick="appendCalc('1')">1</button>
+                <button class="key" onclick="appendCalc('2')">2</button>
+                <button class="key" onclick="appendCalc('3')">3</button>
+                <button class="key operator" onclick="appendCalc('+')">+</button>
+                
+                <button class="key" onclick="appendCalc('0')">0</button>
+                <button class="key" onclick="appendCalc('.')">.</button>
+                <button class="key action" onclick="backspaceCalc()">⌫</button>
+                <button class="key equals" onclick="calculateResult()">=</button>
+            </div>
+        </div>
+
+        <!-- 2. ProCalc Panel (Scientific Calculator) -->
+        <div id="panel-procalc" class="panel">
+            <div class="calc-display">
+                <div class="calc-history-preview" id="proHistory"></div>
+                <div class="calc-main-output" id="proOutput">0</div>
+            </div>
+            <div class="keypad pro">
+                <button class="key action" onclick="clearPro()">C</button>
+                <button class="key operator" onclick="appendPro('(')">(</button>
+                <button class="key operator" onclick="appendPro(')')">)</button>
+                <button class="key operator" onclick="appendPro('%')">%</button>
+                <button class="key operator" onclick="appendPro('/')">÷</button>
+                <button class="key action" onclick="backspacePro()">⌫</button>
+                <button class="key operator" onclick="toggleRadDeg()" id="radDegBtn">Rad</button>
+
+                <button class="key" onclick="appendPro('sin(')">sin</button>
+                <button class="key" onclick="appendPro('cos(')">cos</button>
+                <button class="key" onclick="appendPro('tan(')">tan</button>
+                <button class="key" onclick="appendPro('7')">7</button>
+                <button class="key" onclick="appendPro('8')">8</button>
+                <button class="key" onclick="appendPro('9')">9</button>
+                <button class="key operator" onclick="appendPro('*')">×</button>
+
+                <button class="key" onclick="appendPro('Math.log(')">ln</button>
+                <button class="key" onclick="appendPro('Math.log10(')">log</button>
+                <button class="key" onclick="appendPro('1/')">1/x</button>
+                <button class="key" onclick="appendPro('4')">4</button>
+                <button class="key" onclick="appendPro('5')">5</button>
+                <button class="key" onclick="appendPro('6')">6</button>
+                <button class="key operator" onclick="appendPro('-')">−</button>
+
+                <button class="key" onclick="appendPro('Math.exp(')">eˣ</button>
+                <button class="key" onclick="appendPro('**2')">x²</button>
+                <button class="key" onclick="appendPro('**')">xʸ</button>
+                <button class="key" onclick="appendPro('1')">1</button>
+                <button class="key" onclick="appendPro('2')">2</button>
+                <button class="key" onclick="appendPro('3')">3</button>
+                <button class="key operator" onclick="appendPro('+')">+</button>
+
+                <button class="key" onclick="appendPro('Math.abs(')">|x|</button>
+                <button class="key" onclick="appendPro('Math.PI')">π</button>
+                <button class="key" onclick="appendPro('Math.E')">e</button>
+                <button class="key" onclick="appendPro('Math.sqrt(')">√</button>
+                <button class="key" onclick="appendPro('0')">0</button>
+                <button class="key" onclick="appendPro('.')">.</button>
+                <button class="key equals" onclick="calculateProResult()">=</button>
+            </div>
+        </div>
+
+        <!-- 3. History Panel -->
+        <div id="panel-history" class="panel">
+            <div class="tool-label">Calculation History</div>
+            <div class="history-list" id="historyList">
+                <div style="color: var(--text-muted); text-align: center; margin-top: 20px; font-size: 13px;">No calculations yet!</div>
+            </div>
+            <button class="clear-history-btn" onclick="clearHistory()">Clear History</button>
+        </div>
+
+        <!-- 4. Algebra Panel -->
+        <div id="panel-algebra" class="panel">
+            <div class="tool-group">
+                <label class="tool-label">Quadratic Equation (ax² + bx + c = 0)</label>
+                <div style="display: flex; gap: 6px;">
+                    <input type="number" id="quad-a" class="tool-input" placeholder="a">
+                    <input type="number" id="quad-b" class="tool-input" placeholder="b">
+                    <input type="number" id="quad-c" class="tool-input" placeholder="c">
+                </div>
+                <button class="tool-btn" onclick="solveQuadratic()">Solve Roots</button>
+            </div>
+            <div class="result-box" id="algebra-result">Result will appear here...</div>
+        </div>
+
+        <!-- 5. Statistics Panel -->
+        <div id="panel-stats" class="panel">
+            <div class="tool-group">
+                <label class="tool-label">Data Set (Comma separated numbers)</label>
+                <input type="text" id="stats-input" class="tool-input" placeholder="e.g. 10, 20, 30, 40">
+                <button class="tool-btn" onclick="calculateStats()">Calculate Statistics</button>
+            </div>
+            <div class="result-box" id="stats-result">Mean, Median, Mode, Variance, SD...</div>
+        </div>
+
+        <!-- 6. Unit Converter Panel -->
+        <div id="panel-units" class="panel">
+            <div class="tool-group">
+                <label class="tool-label">Category</label>
+                <select id="unit-category" class="tool-select" onchange="updateUnitsList()">
+                    <option value="length">Length</option>
+                    <option value="weight">Weight / Mass</option>
+                    <option value="temperature">Temperature</option>
+                    <option value="area">Area</option>
+                    <option value="volume">Volume</option>
+                    <option value="speed">Speed</option>
+                    <option value="time">Time</option>
+                    <option value="data">Data Storage</option>
+                </select>
+            </div>
+            <div class="tool-group">
+                <label class="tool-label">Value</label>
+                <input type="number" id="unit-val" class="tool-input" value="1" oninput="convertUnits()">
+            </div>
+            <div style="display: flex; gap: 6px;">
+                <div class="tool-group" style="flex:1;">
+                    <label class="tool-label">From</label>
+                    <select id="unit-from" class="tool-select" onchange="convertUnits()"></select>
+                </div>
+                <div class="tool-group" style="flex:1;">
+                    <label class="tool-label">To</label>
+                    <select id="unit-to" class="tool-select" onchange="convertUnits()"></select>
+                </div>
+            </div>
+            <div class="result-box" id="unit-result">Converted value...</div>
+        </div>
+
+        <!-- 7. Number Bases Panel -->
+        <div id="panel-bases" class="panel">
+            <div class="tool-group">
+                <label class="tool-label">Number Base Converter</label>
+                <input type="text" id="num-input" class="tool-input" placeholder="Enter number" oninput="convertBase()">
+                <select id="num-base" class="tool-select" style="margin-top: 6px;" onchange="convertBase()">
+                    <option value="10">Decimal (Base 10)</option>
+                    <option value="2">Binary (Base 2)</option>
+                    <option value="16">Hexadecimal (Base 16)</option>
+                    <option value="8">Octal (Base 8)</option>
+                </select>
+            </div>
+            <div class="result-box" id="base-result">All base conversions will appear here...</div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="app-footer">
+        Built with 💜 by Nexus Tech
+    </div>
+</div>
+
+<script>
+    let globalHistory = [];
+    let isRadMode = true;
+
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('panel-' + tabId).classList.add('active');
+        btn.classList.add('active');
+        if(tabId === 'units') updateUnitsList();
+        if(tabId === 'history') renderHistory();
+    }
+
+    function addHistory(expr, ans) {
+        globalHistory.unshift({ expr: expr, ans: ans });
+        if(globalHistory.length > 50) globalHistory.pop();
+    }
+
+    function renderHistory() {
+        let listEl = document.getElementById('historyList');
+        if(globalHistory.length === 0) {
+            listEl.innerHTML = '<div style="color: var(--text-muted); text-align: center; margin-top: 20px; font-size: 13px;">No calculations yet!</div>';
+            return;
+        }
+        let html = '';
+        globalHistory.forEach(item => {
+            html += `
+                <div class="history-item">
+                    <span class="history-expr">${item.expr}</span>
+                    <span class="history-ans">${item.ans}</span>
+                </div>
+            `;
+        });
+        listEl.innerHTML = html;
+    }
+
+    function clearHistory() {
+        globalHistory = [];
+        renderHistory();
+    }
+
+    // Standard Calculator Logic
+    let calcExpression = "";
+    function appendCalc(val) {
+        calcExpression += val;
+        document.getElementById('calcOutput').innerText = calcExpression || "0";
+    }
+    function clearCalc() {
+        calcExpression = "";
+        document.getElementById('calcOutput').innerText = "0";
+        document.getElementById('calcHistory').innerText = "";
+    }
+    function backspaceCalc() {
+        calcExpression = calcExpression.slice(0, -1);
+        document.getElementById('calcOutput').innerText = calcExpression || "0";
+    }
+    function calculateResult() {
+        try {
+            let sanitized = calcExpression.replace(/×/g, '*').replace(/÷/g, '/');
+            let res = eval(sanitized);
+            document.getElementById('calcHistory').innerText = calcExpression + " =";
+            addHistory(calcExpression, res);
+            calcExpression = String(res);
+            document.getElementById('calcOutput').innerText = calcExpression;
+        } catch(e) {
+            document.getElementById('calcOutput').innerText = "Error";
+            calcExpression = "";
+        }
+    }
+
+    // ProCalc Scientific Logic
+    let proExpression = "";
+    function toggleRadDeg() {
+        isRadMode = !isRadMode;
+        document.getElementById('radDegBtn').innerText = isRadMode ? "Rad" : "Deg";
+    }
+
+    function appendPro(val) {
+        proExpression += val;
+        document.getElementById('proOutput').innerText = proExpression || "0";
+    }
+    function clearPro() {
+        proExpression = "";
+        document.getElementById('proOutput').innerText = "0";
+        document.getElementById('proHistory').innerText = "";
+    }
+    function backspacePro() {
+        proExpression = proExpression.slice(0, -1);
+        document.getElementById('proOutput').innerText = proExpression || "0";
+    }
+
+    function calculateProResult() {
+        try {
+            let exp = proExpression;
+            let processed = exp.replace(/([0-9.]+)%/g, '($1/100)');
+            processed = processed.replace(/sin\(/g, isRadMode ? 'Math.sin(' : 'Math.sin((Math.PI/180)*')
+                               .replace(/cos\(/g, isRadMode ? 'Math.cos(' : 'Math.cos((Math.PI/180)*')
+                               .replace(/tan\(/g, isRadMode ? 'Math.tan(' : 'Math.tan((Math.PI/180)*');
+
+            let res = eval(processed);
+            if (isNaN(res) || !isFinite(res)) throw new Error("Invalid calculation");
+
+            document.getElementById('proHistory').innerText = proExpression + " =";
+            addHistory(proExpression, res);
+            proExpression = String(res);
+            document.getElementById('proOutput').innerText = proExpression;
+        } catch(e) {
+            document.getElementById('proOutput').innerText = "Error";
+            proExpression = "";
+        }
+    }
+
+    // Quadratic Solver
+    function solveQuadratic() {
+        let a = parseFloat(document.getElementById('quad-a').value);
+        let b = parseFloat(document.getElementById('quad-b').value);
+        let c = parseFloat(document.getElementById('quad-c').value);
+        if(isNaN(a) || isNaN(b) || isNaN(c)) {
+            document.getElementById('algebra-result').innerText = "Please enter valid numbers.";
+            return;
+        }
+        let disc = b*b - 4*a*c;
+        if(disc > 0) {
+            let r1 = (-b + Math.sqrt(disc)) / (2*a);
+            let r2 = (-b - Math.sqrt(disc)) / (2*a);
+            document.getElementById('algebra-result').innerHTML = `Two Real Roots:<br>x₁ = ${r1.toFixed(4)}<br>x₂ = ${r2.toFixed(4)}`;
+        } else if(disc === 0) {
+            let r = -b / (2*a);
+            document.getElementById('algebra-result').innerHTML = `One Repeated Root:<br>x = ${r.toFixed(4)}`;
+        } else {
+            let real = (-b / (2*a)).toFixed(4);
+            let imag = (Math.sqrt(-disc) / (2*a)).toFixed(4);
+            document.getElementById('algebra-result').innerHTML = `Complex Roots:<br>x₁ = ${real} + ${imag}i<br>x₂ = ${real} - ${imag}i`;
+        }
+    }
+
+    // Statistics
+    function calculateStats() {
+        let raw = document.getElementById('stats-input').value;
+        let arr = raw.split(',').map(n => parseFloat(n.trim())).filter(n => !isNaN(n));
+        if(arr.length === 0) {
+            document.getElementById('stats-result').innerText = "Please enter valid numbers.";
+            return;
+        }
+        arr.sort((a,b) => a-b);
+        let n = arr.length;
+        let sum = arr.reduce((a,b) => a+b, 0);
+        let mean = sum / n;
+        let median = n % 2 === 0 ? (arr[n/2 - 1] + arr[n/2])/2 : arr[Math.floor(n/2)];
+        let variance = arr.reduce((a,b) => a + Math.pow(b - mean, 2), 0) / n;
+        let sd = Math.sqrt(variance);
+
+        document.getElementById('stats-result').innerHTML = `
+            Count: ${n} | Sum: ${sum}<br>
+            Mean: ${mean.toFixed(4)}<br>
+            Median: ${median}<br>
+            Variance: ${variance.toFixed(4)}<br>
+            Std Deviation: ${sd.toFixed(4)}
+        `;
+    }
+
+    // Unit Converter Data
+    const unitsData = {
+        length: { meters: 1, kilometers: 1000, centimeters: 0.01, millimeters: 0.001, miles: 1609.34, feet: 0.3048, inches: 0.0254, yards: 0.9144 },
+        weight: { kilograms: 1, grams: 0.001, milligrams: 0.000001, pounds: 0.453592, ounces: 0.0283495, tonnes: 1000 },
+        temperature: { celsius: 'C', fahrenheit: 'F', kelvin: 'K' },
+        area: { "sq meters": 1, "sq kilometers": 1000000, "sq miles": 2589988, acres: 4046.86, hectares: 10000 },
+        volume: { liters: 1, milliliters: 0.001, "cubic meters": 1000, gallons: 3.78541, pints: 0.473176 },
+        speed: { "m/s": 1, "km/h": 0.277778, mph: 0.44704, knots: 0.514444 },
+        time: { seconds: 1, minutes: 60, hours: 3600, days: 86400, weeks: 604800 },
+        data: { bytes: 1, kilobytes: 1024, megabytes: 1048576, gigabytes: 1073741824, terabytes: 1099511627776 }
+    };
+
+    function updateUnitsList() {
+        let cat = document.getElementById('unit-category').value;
+        let keys = Object.keys(unitsData[cat]);
+        let fromSel = document.getElementById('unit-from');
+        let toSel = document.getElementById('unit-to');
+        fromSel.innerHTML = "";
+        toSel.innerHTML = "";
+        keys.forEach(k => {
+            fromSel.innerHTML += `<option value="${k}">${k}</option>`;
+            toSel.innerHTML += `<option value="${k}">${k}</option>`;
+        });
+        if(keys.length > 1) toSel.selectedIndex = 1;
+        convertUnits();
+    }
+
+    function convertUnits() {
+        let cat = document.getElementById('unit-category').value;
+        let val = parseFloat(document.getElementById('unit-val').value);
+        let from = document.getElementById('unit-from').value;
+        let to = document.getElementById('unit-to').value;
+        if(isNaN(val)) return;
+
+        let result = 0;
+        if(cat === 'temperature') {
+            let celsius = val;
+            if(from === 'fahrenheit') celsius = (val - 32) * 5/9;
+            if(from === 'kelvin') celsius = val - 273.15;
+
+            let target = celsius;
+            if(to === 'fahrenheit') target = (celsius * 9/5) + 32;
+            if(to === 'kelvin') target = celsius + 273.15;
+            result = target;
+        } else {
+            let baseVal = val * unitsData[cat][from];
+            result = baseVal / unitsData[cat][to];
+        }
+        document.getElementById('unit-result').innerText = `${val} ${from} = ${result.toPrecision(6)} ${to}`;
+    }
+
+    // Number Bases
+    function convertBase() {
+        let valStr = document.getElementById('num-input').value.trim();
+        let base = parseInt(document.getElementById('num-base').value);
+        if(!valStr) {
+            document.getElementById('base-result').innerText = "Enter a number...";
+            return;
+        }
+        let dec = parseInt(valStr, base);
+        if(isNaN(dec)) {
+            document.getElementById('base-result').innerText = "Invalid number for this base.";
+            return;
+        }
+        document.getElementById('base-result').innerHTML = `
+            Decimal (10): ${dec.toString(10)}<br>
+            Binary (2): ${dec.toString(2)}<br>
+            Hex (16): ${dec.toString(16).toUpperCase()}<br>
+            Octal (8): ${dec.toString(8)}
+        `;
+    }
+
+    updateUnitsList();
+</script>
+
+</body>
+</html>
