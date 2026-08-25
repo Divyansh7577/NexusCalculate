@@ -1,0 +1,60 @@
+name: Build Android APK with Custom Name & Logo
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install Cordova
+      run: npm install -g cordova
+
+    - name: Create Cordova Project and Setup
+      run: |
+        # Yahan 'com.divyansh.calc' apna package name aur 'Divyansh Calculator' apna App ka naam likh sakte ho
+        cordova create myApp com.nexus.clculate "Nexus Calculate"
+        cd myApp
+        cordova platform add android
+        
+        rm -rf www/*
+        cp ../index.html www/index.html
+        
+        # Agar tumne 'icon.png' naam se image upload ki hai, toh use res folder me copy karke config.xml me set kar do
+        if [ -f ../icon.png ]; then
+          mkdir -p res/icon/android
+          cp ../icon.png res/icon/android/icon.png
+          
+          # config.xml me icon tag add karna bina plugin ke
+          echo '  <icon src="res/icon/android/icon.png" />' >> config.xml
+        fi
+        
+        cordova build android --debug
+
+    - name: Find and Move APK
+      run: |
+        mkdir -p final_apk
+        find myApp -name "*.apk" -exec cp {} final_apk/ \;
+        ls -la final_apk
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: CustomNamed-APK
+        path: final_apk/*.apk
