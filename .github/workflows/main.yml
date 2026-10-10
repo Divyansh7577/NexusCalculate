@@ -1,61 +1,107 @@
-name: Build Android APK with Custom Name & Logo
+name: Build Android APK
 
 on:
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: App name shown on the phone
+        default: Nexus Calculate
+      app_id:
+        description: Package id (lowercase, like com.nexustech.calculate)
+        default: com.nexustech.calculate
+      bg_color:
+        description: Icon and native splash background colour
+        default: "#07060f"
+      splash_ms:
+        description: Native splash duration in milliseconds
+        default: "1000"
+      release:
+        description: Also publish the APK as a GitHub Release
+        type: boolean
+        default: false
   push:
-    branches: [ main ]
+    branches: [main]
+    paths:
+      - index.html
+      - icon.png
+      - "splash/**"
+      - .github/workflows/build-apk.yml
+
+permissions:
+  contents: write
 
 jobs:
-  build:
+  apk:
     runs-on: ubuntu-latest
-
+    env:
+      APP_NAME: ${{ inputs.app_name || 'Nexus Calculate' }}
+      APP_ID: ${{ inputs.app_id || 'com.nexustech.calculate' }}
+      BG: ${{ inputs.bg_color || '#07060f' }}
+      MS: ${{ inputs.splash_ms || '1000' }}
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
 
-    - name: Install Cordova
-      run: npm install -g cordova
+      - name: Install ImageMagick
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
 
-    - name: Create Cordova Project and Setup
-      run: |
-        cordova create myApp com.nexus.calculate "Nexus Calculate"
-        cd myApp
-        cordova platform add android
-        
-        rm -rf www/*
-        cp ../index.html www/index.html
-        
-        if [ -f ../icon.png ]; then
-          mkdir -p res/icon/android
-          cp ../icon.png res/icon/android/icon.png
-          
-          # Icon set karne ke liye
-          sed -i '/<\/widget>/i \ \ <icon src="res/icon/android/icon.png" />' config.xml
-          
-          # Splash screen ko hatane ke liye
-          sed -i '/<\/widget>/i \ \ <preference name="SplashScreen" value="none" />' config.xml
-        fi
-        
-        cordova build android --debug
+      - name: Prepare web files, icon and splash images
+        run: |
+          set -e
+          [ -f index.html ] || { echo "index.html is missing"; exit 1; }
+          [ -f icon.png ] || { echo "icon.png is missing"; exit 1; }
+          mkdir -p www assets
+          cp index.html icon.png www/
+          [ -d splash ] && cp -r splash www/ || true
+          # icon: logo on a solid colour, plus adaptive layers
+          convert icon.png -resize 680x680 -background none -gravity center -extent 1024x1024 assets/icon-foreground.png
+          convert -size 1024x1024 "xc:$BG" assets/icon-background.png
+          convert assets/icon-background.png assets/icon-foreground.png -composite assets/icon-only.png
+          # splash: your own splash/splash.png, otherwise colour + logo
+          SL=icon.png
+          [ -f splash/logo.png ] && SL=splash/logo.png
+          if [ -f splash/splash.png ]; then
+            convert splash/splash.png -resize 2732x2732^ -gravity center -extent 2732x2732 assets/splash.png
+          else
+            convert -size 2732x2732 "xc:$BG" \( "$SL" -resize 700x700 \) -gravity center -composite assets/splash.png
+          fi
+          cp assets/splash.png assets/splash-dark.png
 
-    - name: Find and Move APK
-      run: |
-        mkdir -p final_apk
-        find myApp -name "*.apk" -exec cp {} final_apk/ \;
-        ls -la final_apk
+      - name: Create the Android project
+        run: |
+          set -e
+          npm init -y
+          npm i @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7 @capacitor/splash-screen@7
+          npm i -D @capacitor/assets
+          node -e "require('fs').writeFileSync('capacitor.config.json',JSON.stringify({appId:process.env.APP_ID,appName:process.env.APP_NAME,webDir:'www',plugins:{SplashScreen:{launchShowDuration:+process.env.MS,launchAutoHide:true,backgroundColor:process.env.BG,androidScaleType:'CENTER_CROP',showSpinner:false,splashFullScreen:true,splashImmersive:true}}},null,2))"
+          npx cap add android
+          npx capacitor-assets generate --android --assetPath assets
+          npx cap sync android
 
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: CustomNamed-APK
-        path: final_apk/*.apk
+      - name: Build debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ../Nexus-Calculate.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Nexus-Calculate-APK
+          path: Nexus-Calculate.apk
+
+      - name: Publish release
+        if: ${{ inputs.release }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: ${{ env.APP_NAME }} v${{ github.run_number }}
+          files: Nexus-Calculate.apk
